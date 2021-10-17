@@ -1,42 +1,57 @@
 // Require https module
 const https = require("https");
 
+// Print Error Messages
+function printError(error){
+  console.error(error.message); 
+}
+
 function printMessage(username, badgeCount, points) {
   const message = `${username} has ${badgeCount} totalbadges and ${points} points in JavaScript`;
   console.log(message);
 }
 
 function getProfile(username) {
-  const request = https.get(
-    `https://teamtreehouse.com/${username}.json`,
-    (response) => {
+  try {
+    const request = https.get(
+      `https://teamtreehouse.com/${username}.json`,
+      (response) => {
+        let body = "";
 
-      let body = "";
+        // Beginning event (Data Event)
+        response.on("data", (data) => {
+          body += data.toString(); // Convert buffer to string
+        });
 
-      // Beginning event (Data Event)
-      response.on("data", (data) => {
-        body += data.toString(); // Convert buffer to string
-      });
+        // Ending Event (Data Event)
+        response.on("end", () => {
+          try {
+            const profile = JSON.parse(body); // Convert string to object
+            printMessage(
+              username,
+              profile.badges.length,
+              profile.points.JavaScript
+            );
+          } catch (error) {
+            printError(error);
+          }
+        });
+      }
+    );
 
-      // Ending Event (Data Event)
-      response.on("end", () => {
-        const profile = JSON.parse(body); // Convert string to object 
-        printMessage(
-          username,
-          profile.badges.length,
-          profile.points.JavaScript
-        );
-      });
-    }
-  );
+    // Works if no error throw right away but is emitted
+    request.on("error", printError);
+  } catch (error) {
+    printError(error);
+  }
 }
 
-const users = ["chalkers", "alenaholligan", "davemcfarland"]; 
+const users = process.argv.slice(2); // Remove first two elements of array
 
-users.forEach(getProfile); 
+users.forEach(getProfile);
 
 /* Equivalent 
 users.forEach(username => {
     getProfile(username); 
 })
-*/ 
+*/
