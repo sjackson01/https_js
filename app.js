@@ -2,8 +2,8 @@
 const https = require("https");
 
 // Print Error Messages
-function printError(error){
-  console.error(error.message); 
+function printError(error) {
+  console.error(error.message);
 }
 
 function printMessage(username, badgeCount, points) {
@@ -16,26 +16,31 @@ function getProfile(username) {
     const request = https.get(
       `https://teamtreehouse.com/${username}.json`,
       (response) => {
-        let body = "";
+        if (response.statusCode === 200) {
+          let body = "";
 
-        // Beginning event (Data Event)
-        response.on("data", (data) => {
-          body += data.toString(); // Convert buffer to string
-        });
+          // Beginning event (Data Event)
+          response.on("data", (data) => {
+            body += data.toString(); // Convert buffer to string
+          });
 
-        // Ending Event (Data Event)
-        response.on("end", () => {
-          try {
-            const profile = JSON.parse(body); // Convert string to object
-            printMessage(
-              username,
-              profile.badges.length,
-              profile.points.JavaScript
-            );
-          } catch (error) {
-            printError(error);
-          }
-        });
+          // Ending Event (Data Event)
+          response.on("end", () => {
+            try {
+              const profile = JSON.parse(body); // Convert string to object
+              printMessage(
+                username,
+                profile.badges.length,
+                profile.points.JavaScript
+              );
+            } catch (error) {
+              printError(error);
+            }
+          });
+        } else {
+          const message = `There was an error getting the profile for ${username} (${response.statusCode})`;
+          printError(statusCodeError); 
+        }
       }
     );
 
